@@ -1,0 +1,15 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"supplier": {
+		"name": "Savvy Web Systems",
+		"url": "https://savvyweb.systems",
+		"contact": {
+			"name": "C. Spencer Beggs",
+			"email": "security@savvyweb.systems"
+		}
+	},
+	"copyright": {
+		"holder": "Savvy Web Strategy, LLC",
+		"startYear": 2024
+	}
+}
