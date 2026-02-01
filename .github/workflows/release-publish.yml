@@ -11,6 +11,11 @@ on:
         description: Run in dry-run mode
         type: boolean
         default: false
+      sbom-config:
+        description: SBOM metadata configuration (JSON) for NTIA-compliant SBOM generation
+        type: string
+        required: false
+        default: ""
     secrets:
       APP_ID:
         required: true
@@ -53,8 +58,6 @@ jobs:
 
       - name: Run release
         uses: savvy-web/workflow-release-action@main
-        env:
-          SILK_RELEASE_SBOM_TEMPLATE: ${{ vars.SILK_RELEASE_SBOM_TEMPLATE }}
         with:
           phase: ${{ inputs.phase }}
           app-id: ${{ secrets.APP_ID }}
@@ -63,3 +66,4 @@ jobs:
           dry-run: ${{ inputs.dry-run }}
           custom-registries: ${{ secrets.CUSTOM_REGISTRIES }}
           npm-token: ${{ secrets.NPM_TOKEN }}
+          sbom-config: ${{ inputs.sbom-config }}

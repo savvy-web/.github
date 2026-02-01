@@ -27,6 +27,11 @@ on:
         description: Comma-separated list of bot names allowed to trigger review, or "*" for all
         type: string
         default: "*"
+      sbom-config:
+        description: SBOM metadata configuration (JSON) for NTIA-compliant SBOM generation
+        type: string
+        required: false
+        default: ""
     secrets:
       APP_ID:
         required: true
@@ -60,8 +65,6 @@ jobs:
 
       - name: Pre-publish validation
         uses: savvy-web/workflow-release-action@main
-        env:
-          SILK_RELEASE_SBOM_TEMPLATE: ${{ vars.SILK_RELEASE_SBOM_TEMPLATE }}
         with:
           phase: validation
           app-id: ${{ secrets.APP_ID }}
@@ -69,6 +72,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           dry-run: ${{ inputs.dry-run }}
           custom-registries: ${{ secrets.CUSTOM_REGISTRIES }}
+          sbom-config: ${{ inputs.sbom-config }}
 
   validate:
     name: Code Validation
