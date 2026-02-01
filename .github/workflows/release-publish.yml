@@ -53,6 +53,8 @@ jobs:
 
       - name: Run release
         uses: savvy-web/workflow-release-action@main
+        env:
+          SILK_RELEASE_SBOM_TEMPLATE: ${{ vars.SILK_RELEASE_SBOM_TEMPLATE }}
         with:
           phase: ${{ inputs.phase }}
           app-id: ${{ secrets.APP_ID }}
