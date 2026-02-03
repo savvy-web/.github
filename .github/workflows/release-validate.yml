@@ -142,7 +142,7 @@ jobs:
             bun) echo "exec=bun x" >> $GITHUB_OUTPUT ;;
             pnpm) echo "exec=pnpm exec" >> $GITHUB_OUTPUT ;;
             yarn) echo "exec=yarn exec" >> $GITHUB_OUTPUT ;;
-            *) echo "exec=npx" >> $GITHUB_OUTPUT ;;
+            *) echo "exec=npx --no" >> $GITHUB_OUTPUT ;;
           esac
 
       - name: Fetch base branch
@@ -151,6 +151,8 @@ jobs:
       - name: Validate PR Title
         id: pr-title
         continue-on-error: true
+        env:
+          COMMITLINT_SKIP_DCO: "true"
         run: |
           set +e
           ${{ steps.pm.outputs.exec }} commitlint --config lib/configs/commitlint.config.ts <<< "${{ github.event.pull_request.title }}"
