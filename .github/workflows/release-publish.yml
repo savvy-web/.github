@@ -69,17 +69,26 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
           sbom-config: ${{ inputs.sbom-config }}
 
+      - name: Generate GitHub App token
+        id: app-token
+        if: steps.release.outputs.released_packages != '[]' && !inputs.dry-run
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: savvy-web
+
       - name: Notify package release router
         if: steps.release.outputs.released_packages != '[]' && !inputs.dry-run
         env:
-          GH_TOKEN: ${{ steps.release.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           # Extract package names from released_packages JSON
           packages=$(echo '${{ steps.release.outputs.released_packages }}' | jq -r '.[].name' | tr '\n' ',' | sed 's/,$//')
 
           echo "Notifying router of released packages: $packages"
 
-          gh api repos/savvy-web/.github/dispatches \
+          gh api repos/savvy-web/.github-private/dispatches \
             -f event_type=packages-released \
             -f "client_payload[packages]=$packages" \
             -f "client_payload[repository]=${{ github.repository }}"
