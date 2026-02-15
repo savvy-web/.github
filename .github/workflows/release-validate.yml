@@ -502,7 +502,7 @@ jobs:
             const botName = '${{ inputs.app-bot-name }}';
             const claudeComment = comments.find(comment =>
               comment.user.login === botName &&
-              (comment.body.includes('## Code Review') || comment.body.includes('<!-- claude-code-review -->'))
+              (comment.body.includes('# Code Review') || comment.body.includes('<!-- claude-code-review -->'))
             );
 
             if (claudeComment) {
