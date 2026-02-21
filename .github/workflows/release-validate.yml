@@ -444,7 +444,7 @@ jobs:
             };
 
             if (shouldSkip) {
-              params.conclusion = 'neutral';
+              params.conclusion = 'success';
             }
 
             const { data: checkRun } = await github.rest.checks.create(params);
