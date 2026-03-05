@@ -3,7 +3,7 @@
 	"changelog": [
 		"@savvy-web/changesets/changelog",
 		{
-			"repo": "savvy-web/.github"
+			"repo": "owner/repo"
 		}
 	],
 	"commit": false,
