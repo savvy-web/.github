@@ -39,10 +39,10 @@ jobs:
           fetch-depth: 0
       - name: Setup Runtime
         id: runtime
-        uses: savvy-web/workflow-runtime-action@main
+        uses: savvy-web/workflow-runtime-action@dev
       - name: Update Config Dependencies
         id: update
-        uses: savvy-web/pnpm-config-dependency-action@main
+        uses: savvy-web/pnpm-config-dependency-action@dev
         with:
           app-id: ${{ secrets.APP_ID }}
           app-private-key: ${{ secrets.APP_PRIVATE_KEY }}

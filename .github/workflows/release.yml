@@ -64,8 +64,10 @@ jobs:
 
       - name: Detect workflow phase
         id: control
-        uses: savvy-web/workflow-control-action@main
-
+        uses: savvy-web/workflow-control-action@dev
+        with:
+          target-branch: dev
+          release-branch: changeset-release/dev
       - name: Set context flags
         id: context
         run: |
@@ -76,7 +78,7 @@ jobs:
     name: Branch Management
     needs: control
     if: needs.control.outputs.phase == 'branch-management'
-    uses: savvy-web/.github/.github/workflows/release-branch.yml@main
+    uses: savvy-web/.github/.github/workflows/release-branch.yml@dev
     with:
       dry-run: ${{ inputs.dry-run }}
     secrets: inherit
@@ -87,7 +89,7 @@ jobs:
     if: |
       needs.control.outputs.is_pr_event == 'true' &&
       needs.control.outputs.is_pr_merged != 'true'
-    uses: savvy-web/.github/.github/workflows/release-validate.yml@main
+    uses: savvy-web/.github/.github/workflows/release-validate.yml@dev
     with:
       phase: ${{ needs.control.outputs.phase }}
       dry-run: ${{ inputs.dry-run }}
@@ -102,7 +104,7 @@ jobs:
     name: Publish
     needs: control
     if: needs.control.outputs.phase == 'publishing' || needs.control.outputs.phase == 'close-issues'
-    uses: savvy-web/.github/.github/workflows/release-publish.yml@main
+    uses: savvy-web/.github/.github/workflows/release-publish.yml@dev
     with:
       phase: ${{ needs.control.outputs.phase }}
       dry-run: ${{ inputs.dry-run }}
