@@ -50,6 +50,7 @@ jobs:
       id-token: write
       packages: write
       attestations: write
+      artifact-metadata: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -63,14 +64,15 @@ jobs:
 
       - name: Run release
         id: release
-        uses: savvy-web/workflow-release-action@main
+        uses: savvy-web/workflow-release-action@dev
         with:
           phase: ${{ inputs.phase }}
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-client-id: ${{ vars.APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           dry-run: ${{ inputs.dry-run }}
           custom-registries: ${{ secrets.CUSTOM_REGISTRIES }}
+          release-branch: changesets-release/dev
           npm-token: ${{ secrets.NPM_TOKEN }}
           sbom-config: ${{ inputs.sbom-config }}
 
