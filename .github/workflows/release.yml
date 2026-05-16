@@ -3,6 +3,11 @@ name: Release Dispatcher
 on:
   workflow_call:
     inputs:
+      runner:
+        description: Runner type (e.g., ubuntu-latest)
+        type: string
+        required: false
+        default: ubuntu-latest
       dry-run:
         description: Run in dry-run mode (preview only)
         type: boolean
@@ -46,7 +51,7 @@ on:
 jobs:
   control:
     name: Detect Phase
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     permissions:
       contents: read
       pull-requests: read
@@ -79,6 +84,7 @@ jobs:
     uses: savvy-web/.github/.github/workflows/release-branch.yml@main
     with:
       dry-run: ${{ inputs.dry-run }}
+      runner: ${{ inputs.runner }}
     secrets: inherit
 
   validation:
@@ -96,6 +102,7 @@ jobs:
       skip-claude-review: ${{ inputs.skip-claude-review }}
       claude-review-allowed-bots: ${{ inputs.claude-review-allowed-bots }}
       sbom-config: ${{ vars.SILK_RELEASE_SBOM_TEMPLATE }}
+      runner: ${{ inputs.runner }}
     secrets: inherit
 
   publish:
@@ -107,4 +114,5 @@ jobs:
       phase: ${{ needs.control.outputs.phase }}
       dry-run: ${{ inputs.dry-run }}
       sbom-config: ${{ vars.SILK_RELEASE_SBOM_TEMPLATE }}
+      runner: ${{ inputs.runner }}
     secrets: inherit
