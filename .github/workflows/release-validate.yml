@@ -3,6 +3,11 @@ name: PR Validation
 on:
   workflow_call:
     inputs:
+      runner:
+        description: Runner type (e.g., ubuntu-latest)
+        type: string
+        required: false
+        default: ubuntu-latest
       phase:
         description: The detected workflow phase
         type: string
@@ -50,7 +55,7 @@ on:
 jobs:
   pre-publish:
     name: Pre-Publish Validation
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     if: inputs.phase == 'validation'
     permissions:
       contents: read
@@ -89,7 +94,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          client-id: ${{ secrets.APP_CLIENT_ID }}
+          client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           permission-contents: read
           permission-checks: write
@@ -342,7 +347,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
@@ -917,7 +922,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           permission-checks: write
 

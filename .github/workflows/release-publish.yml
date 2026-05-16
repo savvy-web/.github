@@ -3,6 +3,11 @@ name: Release Publishing
 on:
   workflow_call:
     inputs:
+      runner:
+        description: Runner type (e.g., ubuntu-latest)
+        type: string
+        required: false
+        default: ubuntu-latest
       phase:
         description: The release phase (publishing or close-issues)
         type: string
@@ -39,7 +44,7 @@ on:
 jobs:
   publish:
     name: Publish Packages
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     permissions:
       contents: write
       id-token: write
@@ -74,7 +79,7 @@ jobs:
         if: steps.release.outputs.released_packages != '[]' && !inputs.dry-run
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           owner: savvy-web
 
