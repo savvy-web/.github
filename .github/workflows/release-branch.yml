@@ -42,7 +42,7 @@ jobs:
         uses: savvy-web/workflow-runtime-action@main
 
       - name: Run release
-        uses: savvy-web/workflow-release-action@main
+        uses: savvy-web/workflow-release-action@dev
         with:
           phase: branch-management
           app-client-id: ${{ vars.APP_CLIENT_ID }}
