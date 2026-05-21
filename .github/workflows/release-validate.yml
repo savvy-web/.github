@@ -122,6 +122,7 @@ jobs:
               { name: 'Conventional Commits', env_key: 'COMMITLINT_CHECK_ID' },
               { name: 'Code Quality', env_key: 'LINT_CHECK_ID' },
               { name: 'Markdown', env_key: 'MARKDOWNLINT_CHECK_ID' },
+              { name: 'Build', env_key: 'BUILD_CHECK_ID' },
               { name: 'Tests', env_key: 'TEST_CHECK_ID' }
             ];
             for (const check of checks) {
@@ -302,6 +303,41 @@ jobs:
                 title: ok ? 'Passed' : `Failed (${annotations.length} issues)`,
                 summary: ok ? 'All markdown files valid' : `Found ${annotations.length} issue(s)`,
                 annotations: annotations.length > 0 ? annotations : undefined
+              }
+            });
+
+      - name: Run Build
+        id: build
+        continue-on-error: true
+        run: |
+          set +e
+          if [ -z "$(jq -r '.scripts["ci:build"] // empty' package.json)" ]; then
+            echo "No ci:build script defined; skipping production build gate."
+            echo "exit_code=skip" >> $GITHUB_OUTPUT
+          else
+            ${{ steps.pm.outputs.name }} run ci:build
+            echo "exit_code=$?" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Build Check
+        if: always()
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const code = '${{ steps.build.outputs.exit_code }}';
+            const skipped = code === 'skip';
+            const ok = code === '0';
+            await github.rest.checks.update({
+              owner: context.repo.owner, repo: context.repo.repo,
+              check_run_id: process.env.BUILD_CHECK_ID,
+              status: 'completed',
+              conclusion: skipped ? 'neutral' : (ok ? 'success' : 'failure'),
+              output: {
+                title: skipped ? 'Skipped' : (ok ? 'Passed' : 'Failed'),
+                summary: skipped
+                  ? 'No ci:build script defined for this repository'
+                  : (ok ? 'Production build succeeded' : 'Production build failed')
               }
             });
 
@@ -615,7 +651,7 @@ jobs:
 
             ```bash
             gh api repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}/check-runs | \
-              jq --argjson names '["PR Title Validation","Conventional Commits","Code Quality","Markdown","Tests"]' \
+              jq --argjson names '["PR Title Validation","Conventional Commits","Code Quality","Markdown","Build","Tests"]' \
               '.check_runs[] | select([.name] | inside($names)) | {name, status, conclusion, details_url}'
             ```
 
@@ -624,6 +660,7 @@ jobs:
               - **Conventional Commits** - Validates all commit messages
               - **Code Quality** - Biome linting and formatting
               - **Markdown** - Markdown linting
+              - **Build** - Production build (rslib dev/prod, api-extractor forgotten-exports, TSDoc)
               - **Tests** - Full test suite execution
 
             Excludes irrelevant checks like "Validation" (orchestration), "Cleanup", and "Claude Code Review" itself.
@@ -949,7 +986,7 @@ jobs:
               }
             }
 
-            const names = ['PR Title Validation', 'Conventional Commits', 'Code Quality', 'Markdown', 'Tests', 'Claude Code Review'];
+            const names = ['PR Title Validation', 'Conventional Commits', 'Code Quality', 'Markdown', 'Build', 'Tests', 'Claude Code Review'];
             const { data } = await github.rest.checks.listForRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
