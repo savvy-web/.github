@@ -380,7 +380,7 @@ jobs:
         run: |
           HEAD_REF="${{ github.head_ref }}"
           case "$HEAD_REF" in
-            pnpm/config-deps | copilot/* | dependabot/*)
+            pnpm/config-deps | copilot/* | dependabot/* | changeset-release/*)
               echo "skip-review=true" >> $GITHUB_OUTPUT
               echo "Skipping Claude review - branch '$HEAD_REF' is an automated update (covered by preflight reviews)"
               exit 0
