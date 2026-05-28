@@ -25,8 +25,8 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0(@commitlint/cli@20.5.0(@types/node@25.6.0)(conventional-commits-parser@6.4.0)(typescript@6.0.2))(@commitlint/config-conventional@20.5.0)(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2))(@effect/typeclass@0.40.0(effect@3.21.2))(@effect/workflow@0.18.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2))(@effect/platform@0.96.1(effect@3.21.2))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2))(effect@3.21.2))(commitizen@4.3.1(@types/node@25.6.0)(typescript@6.0.2))(husky@9.1.7)
       '@savvy-web/lint-staged':
-        specifier: ^1.2.0
-        version: 1.2.0(5720b33e238e0c3ac0c789b96d1c562f)
+        specifier: ^1.2.1
+        version: 1.2.1(5720b33e238e0c3ac0c789b96d1c562f)
       '@savvy-web/vitest':
         specifier: ^1.3.2
         version: 1.3.2(77ecb6ab432909eacc9b647a0f1bbe1e)
@@ -603,8 +603,8 @@ packages:
       commitizen: ^4.3.0
       husky: ^9.1.0
 
-  '@savvy-web/lint-staged@1.2.0':
-    resolution: {integrity: sha512-1W1RpPyyjYLgyN4Snorv0ibI5gmkG/i7IAhXd1ULgXJk1epOPdhBKbysuS0hB1kFVxzkOBJFp30+7plszO0NXA==}
+  '@savvy-web/lint-staged@1.2.1':
+    resolution: {integrity: sha512-71Ek0v55vSX1gV6c4XTmuEBRtayOyMvBKI34cGAt5OTJXsIKfms5jA+niEP3Ey9mjcVofQcTJR9xbB9dICcafw==}
     engines: {node: '>=24.0.0'}
     hasBin: true
     peerDependencies:
@@ -615,7 +615,7 @@ packages:
       lint-staged: ^17.0.5
       markdownlint-cli2: ^0.22.1
       markdownlint-cli2-formatter-codequality: ^0.0.7
-      turbo: ^2.9.15
+      turbo: ^2.9.16
       typescript: ^6.0.0
     peerDependenciesMeta:
       '@biomejs/biome':
@@ -3589,7 +3589,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@savvy-web/lint-staged@1.2.0(5720b33e238e0c3ac0c789b96d1c562f)':
+  '@savvy-web/lint-staged@1.2.1(5720b33e238e0c3ac0c789b96d1c562f)':
     dependencies:
       '@effect/cli': 0.75.1(@effect/platform@0.96.1(effect@3.21.2))(@effect/printer-ansi@0.49.0(@effect/typeclass@0.40.0(effect@3.21.2))(effect@3.21.2))(@effect/printer@0.49.0(@effect/typeclass@0.40.0(effect@3.21.2))(effect@3.21.2))(effect@3.21.2)
       '@effect/platform': 0.96.1(effect@3.21.2)
