@@ -48,7 +48,7 @@ jobs:
           persist-credentials: true
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/silk-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@dev
         with:
           turbo-s3-bucket: ${{ secrets.TURBO_S3_BUCKET }}
           turbo-s3-region: ${{ secrets.TURBO_S3_REGION }}
@@ -58,7 +58,7 @@ jobs:
           install-deps: false
 
       - name: Run release
-        uses: savvy-web/silk-release-action@v4
+        uses: savvy-web/silk-release-action@dev
         with:
           phase: branch-management
           app-client-id: ${{ vars.APP_CLIENT_ID }}
