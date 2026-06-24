@@ -65,12 +65,16 @@ jobs:
     name: Pre-Publish Validation
     runs-on: ${{ inputs.runner }}
     if: inputs.phase == 'validation'
+    env:
+      TURBO_TELEMETRY_DISABLED: "1"
+      DO_NOT_TRACK: "1"
+      TURBO_RUN_SUMMARY: "1"
     permissions:
       contents: read
       pull-requests: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup runtime
         id: runtime
@@ -92,8 +96,9 @@ jobs:
     name: Code Validation
     runs-on: ubuntu-latest
     env:
+      TURBO_TELEMETRY_DISABLED: "1"
       DO_NOT_TRACK: "1"
-      TURBO_TELEMETRY_DISABLE: "1"
+      TURBO_RUN_SUMMARY: "1"
     permissions:
       contents: read
       checks: write
@@ -112,7 +117,7 @@ jobs:
         run: sleep 5
 
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
@@ -376,7 +381,7 @@ jobs:
 
       - name: Checkout repository
         if: steps.check-config.outputs.configured == 'true' && inputs.skip-claude-review != true
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}

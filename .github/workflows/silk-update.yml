@@ -27,13 +27,17 @@ jobs:
   pnpm-update:
     name: Update Config Dependencies
     runs-on: ubuntu-latest
+    env:
+      TURBO_TELEMETRY_DISABLED: "1"
+      DO_NOT_TRACK: "1"
+      TURBO_RUN_SUMMARY: "1"
     permissions:
       contents: write
       pull-requests: write
       checks: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0

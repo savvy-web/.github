@@ -27,12 +27,16 @@ jobs:
   manage-branch:
     name: Manage Release Branch
     runs-on: ${{ inputs.runner }}
+    env:
+      TURBO_TELEMETRY_DISABLED: "1"
+      DO_NOT_TRACK: "1"
+      TURBO_RUN_SUMMARY: "1"
     permissions:
       contents: write
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
