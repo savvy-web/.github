@@ -155,11 +155,6 @@ jobs:
               if echo "$RESULT" | jq -e '.publishing.packages[] | select(.name == "@savvy-web/silk" and .status == "published")' >/dev/null; then
                 add_plugin "silk"
               fi
-              # Dispatches only when @savvy-web/github-action-effect itself published —
-              # the marketplace plugin and the npm package share a version.
-              if echo "$RESULT" | jq -e '.publishing.packages[] | select(.name == "@savvy-web/github-action-effects" and .status == "published")' >/dev/null; then
-                add_plugin "github-actions"
-              fi
               ;;
           esac
 
