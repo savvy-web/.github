@@ -98,9 +98,7 @@ jobs:
     concurrency:
       group: silk-validation-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: true
-    if: |
-      needs.control.outputs.is_pr_event == 'true' &&
-      github.event.action != 'closed'
+    if: needs.control.outputs.is_pr_event == 'true' && github.event.action != 'closed'
     uses: savvy-web/.github/.github/workflows/release-validate.yml@main
     with:
       phase: ${{ needs.control.outputs.phase }}
@@ -116,9 +114,7 @@ jobs:
   publish:
     name: Publish
     needs: control
-    if: |
-      (needs.control.outputs.phase == 'publishing' || needs.control.outputs.phase == 'close-issues') &&
-      github.event.action != 'closed'
+    if: (needs.control.outputs.phase == 'publishing' || needs.control.outputs.phase == 'close-issues') && github.event.action != 'closed'
     uses: savvy-web/.github/.github/workflows/release-publish.yml@main
     with:
       phase: ${{ needs.control.outputs.phase }}
