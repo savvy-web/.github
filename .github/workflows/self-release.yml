@@ -5,7 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main, changeset-release/main]
-    types: [opened, synchronize, reopened]
+    # 'closed' fires a run in the same concurrency group as the PR's validation
+    # runs, which cancels the in-flight one on merge. Every job in the dispatcher
+    # is guarded against action == 'closed', so that run is a ~5s no-op.
+    types: [opened, synchronize, reopened, closed]
   workflow_dispatch:
     inputs:
       dry_run:
