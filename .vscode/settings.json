@@ -13,14 +13,7 @@
 	"[yaml]": {
 		"editor.defaultFormatter": "redhat.vscode-yaml"
 	},
-	"biome.enabled": true,
-	"biome.requireConfiguration": true,
-	"editor.codeActionsOnSave": {
-		"source.fixAll.biome": "explicit",
-		"source.fixAll.markdownlint": "explicit",
-		"source.fixAll.ts": "explicit",
-		"source.organizeImports.biome": "explicit"
-	},
+
 	"eslint.enable": false,
 	"files.exclude": {
 		"**/.coverage": true,
