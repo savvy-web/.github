@@ -71,7 +71,7 @@ jobs:
 
       - name: Run release
         id: release
-        uses: savvy-web/silk-release-action@v4
+        uses: savvy-web/silk-release-action@v5
         with:
           phase: ${{ inputs.phase }}
           app-client-id: ${{ vars.APP_CLIENT_ID }}
@@ -85,7 +85,13 @@ jobs:
 
       - name: Generate GitHub App token
         id: app-token
-        if: steps.release.outputs.released_packages != '[]' && !inputs.dry-run
+        # `released_packages` was never a real silk-release-action output (see
+        # action.yml: token/installation-id/app-slug/result/phase/status/
+        # succeeded/package-count/release-pr-number/closed-issues*) — the old
+        # condition always evaluated false, so this step and everything gated
+        # on it below never actually ran. Gate on the real phase/succeeded
+        # outputs instead; v5 names the publishing phase `publish`.
+        if: steps.release.outputs.phase == 'publish' && steps.release.outputs.succeeded == 'true' && !inputs.dry-run
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ vars.APP_CLIENT_ID }}
@@ -93,18 +99,22 @@ jobs:
           owner: savvy-web
 
       - name: Notify package release router
-        if: steps.release.outputs.phase == 'publishing' && steps.release.outputs.succeeded == 'true' && !inputs.dry-run
+        if: steps.release.outputs.phase == 'publish' && steps.release.outputs.succeeded == 'true' && !inputs.dry-run
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           RESULT: ${{ steps.release.outputs.result }}
         run: |
           set -euo pipefail
 
-          # Package names actually published this run (skips packages that
-          # were only considered but skipped/failed) from the structured
-          # `result` output — see silk-release-action.output.schema.json,
-          # PublishingOutput.publishing.packages[].
-          packages=$(echo "$RESULT" | jq -r '[.publishing.packages[] | select(.status == "published") | .name] | join(",")')
+          # Package names actually published this run, from the structured
+          # `result` output. A workspace may publish several packages, under
+          # more than one name, to more than one registry, so this flattens the
+          # workspace map and dedupes. `outcome == "published"` means bytes were
+          # uploaded — it deliberately excludes `recovered` (already on the
+          # registry at an identical digest), which is a success but not a new
+          # publication. See schemas/5.0.0/silk-release-action-5.0.0.json,
+          # PublishOutput.publish.workspaces[].packages[].
+          packages=$(echo "$RESULT" | jq -r '[.publish.workspaces[].packages[] | select(.outcome == "published") | .name] | unique | join(",")')
 
           if [ -z "$packages" ]; then
             echo "No packages published this run; skipping router notification."
@@ -122,8 +132,9 @@ jobs:
             -f "client_payload[packages]=$packages" \
             -f "client_payload[repository]=$GITHUB_REPOSITORY" \
             -f "client_payload[sha]=$release_sha"
+
       - name: Notify marketplace repo
-        if: steps.release.outputs.phase == 'publishing' && steps.release.outputs.succeeded == 'true' && !inputs.dry-run
+        if: steps.release.outputs.phase == 'publish' && steps.release.outputs.succeeded == 'true' && !inputs.dry-run
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           RESULT: ${{ steps.release.outputs.result }}
@@ -131,13 +142,12 @@ jobs:
           set -euo pipefail
 
           # Route this repo's release to the Claude Code marketplace plugin(s)
-          # (if any) it corresponds to in spencerbeggs/bot's
+          # (if any) it corresponds to in savvy-web/systems'
           # .claude-plugin/marketplace.json, and dispatch them all as one
           # `json` patch array (`{"plugins":[{name,sha},...]}`) rather than the
-          # single-plugin manual path — a monorepo release (e.g. effected)
-          # can publish more than one plugin package in a single run, and each
-          # match below appends its own patch to the same array. plugin-bot is
-          # manually incremented and is never dispatched here.
+          # single-plugin manual path — a monorepo release can publish more
+          # than one plugin in a single run, and each match below appends its
+          # own patch to the same array.
           release_sha=$(git rev-parse HEAD)
           plugins_json="[]"
 
@@ -147,9 +157,12 @@ jobs:
 
           case "$GITHUB_REPOSITORY" in
             savvy-web/systems)
-              # Dispatches only when @savvy-web/silk itself published —
-              # the marketplace plugin and the npm package share a version.
-              if echo "$RESULT" | jq -e '.publishing.packages[] | select(.name == "@savvy-web/silk" and .status == "published")' >/dev/null; then
+              # Tracked by GitHub release rather than by package name: the
+              # plugin tree lives in this repo and is repinned to the release
+              # commit, so any completed release that actually created a
+              # GitHub release this run repins it — no dependency on which
+              # npm package happened to publish.
+              if echo "$RESULT" | jq -e 'select(.success) | .totals.releasesCreated > 0' >/dev/null; then
                 add_plugin "silk"
               fi
               ;;
