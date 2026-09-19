@@ -40,7 +40,11 @@ on:
       claude-review-plugins:
         description: Newline-separated Claude Code plugins (name@marketplace) to install before review. Empty string disables.
         type: string
-        default: "design-docs@spencerbeggs"
+        default: |
+          okfit@spencerbeggs
+          effected@spencerbeggs
+          silk@savvy-web-systems
+          vitest-agent@spencerbeggs
       sbom-config:
         description: SBOM metadata configuration (JSON) for NTIA-compliant SBOM generation
         type: string
