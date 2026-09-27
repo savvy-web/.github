@@ -34,6 +34,16 @@ on:
         type: string
         required: false
         default: ""
+      snapshot:
+        description: >-
+          Publish a snapshot of the dispatched branch instead of running the release workflow. Only honoured on workflow_dispatch. Skips phase detection, branch management, validation and publishing, and runs silk-release-action with phase: snapshot.
+        type: boolean
+        default: false
+      snapshot-tag:
+        description: Dist-tag (and prerelease prefix) for a snapshot publish. Never latest.
+        type: string
+        required: false
+        default: next
     secrets:
       APP_ID:
         required: true
@@ -57,6 +67,7 @@ on:
 jobs:
   control:
     name: Detect Phase
+    if: ${{ !inputs.snapshot }}
     runs-on: ${{ inputs.runner }}
     permissions:
       contents: read
@@ -85,7 +96,7 @@ jobs:
   branch-management:
     name: Branch Management
     needs: control
-    if: needs.control.outputs.phase == 'branch-management' && github.event.action != 'closed'
+    if: ${{ !inputs.snapshot && needs.control.outputs.phase == 'branch-management' && github.event.action != 'closed' }}
     uses: savvy-web/.github/.github/workflows/release-branch.yml@main
     with:
       dry-run: ${{ inputs.dry-run }}
@@ -102,7 +113,7 @@ jobs:
     concurrency:
       group: silk-validation-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: true
-    if: needs.control.outputs.is_pr_event == 'true' && github.event.action != 'closed'
+    if: ${{ !inputs.snapshot && needs.control.outputs.is_pr_event == 'true' && github.event.action != 'closed' }}
     uses: savvy-web/.github/.github/workflows/release-validate.yml@main
     with:
       phase: ${{ needs.control.outputs.phase }}
@@ -119,11 +130,31 @@ jobs:
   publish:
     name: Publish
     needs: control
-    if: (needs.control.outputs.phase == 'publishing' || needs.control.outputs.phase == 'close-issues') && github.event.action != 'closed'
+    if: ${{ !inputs.snapshot && (needs.control.outputs.phase == 'publishing' || needs.control.outputs.phase == 'close-issues') && github.event.action != 'closed' }}
     uses: savvy-web/.github/.github/workflows/release-publish.yml@main
     with:
       phase: ${{ needs.control.outputs.phase }}
       dry-run: ${{ inputs.dry-run }}
       sbom-config: ${{ vars.SILK_RELEASE_SBOM_TEMPLATE }}
+      runner: ${{ inputs.runner }}
+    secrets: inherit
+
+  # ---------------------------------------------------------------------------
+  # Snapshot: publish unreleased versions under a non-latest dist-tag so a
+  # downstream can pin them from the registry. workflow_dispatch only. The
+  # action itself refuses a non-branch ref and the release/target branch.
+  # ---------------------------------------------------------------------------
+  snapshot:
+    name: Snapshot
+    if: ${{ inputs.snapshot && github.event_name == 'workflow_dispatch' }}
+    # Its own group, never cancelled: cancelling mid-publish would leave a
+    # partial set under the tag. A second snapshot dispatch queues.
+    concurrency:
+      group: snapshot-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: false
+    uses: savvy-web/.github/.github/workflows/release-snapshot.yml@main
+    with:
+      snapshot-tag: ${{ inputs.snapshot-tag }}
+      dry-run: ${{ inputs.dry-run }}
       runner: ${{ inputs.runner }}
     secrets: inherit
