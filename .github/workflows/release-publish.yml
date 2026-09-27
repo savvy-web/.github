@@ -60,7 +60,7 @@ jobs:
 
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/silk-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@dev
         env:
           # HeroUI Pro's postinstall downloads its components with this token; without it the install leaves them out.
           HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
@@ -73,7 +73,7 @@ jobs:
 
       - name: Run release
         id: release
-        uses: savvy-web/silk-release-action@v5
+        uses: savvy-web/silk-release-action@dev
         env:
           # HeroUI Pro's postinstall downloads its components with this token; without it the install leaves them out.
           HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
