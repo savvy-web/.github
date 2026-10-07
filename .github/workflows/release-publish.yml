@@ -133,6 +133,41 @@ jobs:
             -f "client_payload[repository]=$GITHUB_REPOSITORY" \
             -f "client_payload[sha]=$release_sha"
 
+      - name: Notify package release router
+        if: steps.release.outputs.phase == 'publish' && steps.release.outputs.succeeded == 'true' && !inputs.dry-run
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          RESULT: ${{ steps.release.outputs.result }}
+        run: |
+          set -euo pipefail
+
+          # Package names actually published this run, from the structured
+          # `result` output. A workspace may publish several packages, under
+          # more than one name, to more than one registry, so this flattens the
+          # workspace map and dedupes. `outcome == "published"` means bytes were
+          # uploaded — it deliberately excludes `recovered` (already on the
+          # registry at an identical digest), which is a success but not a new
+          # publication. See schemas/5.0.0/silk-release-action-5.0.0.json,
+          # PublishOutput.publish.workspaces[].packages[].
+          packages=$(echo "$RESULT" | jq -r '[.publish.workspaces[].packages[] | select(.outcome == "published") | .name] | unique | join(",")')
+
+          if [ -z "$packages" ]; then
+            echo "No packages published this run; skipping router notification."
+            exit 0
+          fi
+
+          # The commit the release tags point at; every package tagged in this
+          # monorepo release shares it, so downstream consumers can pin to it.
+          release_sha=$(git rev-parse HEAD)
+
+          echo "Notifying router of released packages: $packages ($release_sha)"
+
+          gh api repos/spencerbeggs/.github-private/dispatches \
+            -f event_type=packages-released \
+            -f "client_payload[packages]=$packages" \
+            -f "client_payload[repository]=$GITHUB_REPOSITORY" \
+            -f "client_payload[sha]=$release_sha"
+
       - name: Notify marketplace repo
         if: steps.release.outputs.phase == 'publish' && steps.release.outputs.succeeded == 'true' && !inputs.dry-run
         env:
@@ -141,30 +176,52 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Route this repo's release to the Claude Code marketplace plugin(s)
-          # (if any) it corresponds to in savvy-web/systems'
-          # .claude-plugin/marketplace.json, and dispatch them all as one
-          # `json` patch array (`{"plugins":[{name,sha},...]}`) rather than the
-          # single-plugin manual path — a monorepo release can publish more
-          # than one plugin in a single run, and each match below appends its
-          # own patch to the same array.
+          # Route this repo's release to the marketplace plugin entries (if
+          # any) it corresponds to in spencerbeggs/bot, and dispatch them all
+          # as one `json` patch array for
+          # spencerbeggs/ai-plugin-marketplace-manager@v2
+          # (`{"plugins":[{name,marketplace,sha},...]}`, see
+          # schemas/2.0/input.json). `marketplace` picks the manifest:
+          # `claude-code` is .claude-plugin/marketplace.json, `copilot` is
+          # .github/plugin/marketplace.json. One release can repin several
+          # entries across both manifests: a monorepo (e.g. effected) versions
+          # a Claude Code and a Copilot plugin as separate tracking workspaces.
           release_sha=$(git rev-parse HEAD)
           plugins_json="[]"
 
           add_plugin() {
-            plugins_json=$(jq -c --arg name "$1" --arg sha "$release_sha" '. + [{name: $name, sha: $sha}]' <<<"$plugins_json")
+            plugins_json=$(jq -c --arg name "$1" --arg marketplace "$2" --arg sha "$release_sha" \
+              '. + [{name: $name, marketplace: $marketplace, sha: $sha}]' <<<"$plugins_json")
+          }
+
+          # Repins <name> in <marketplace> when the tracking workspace
+          # <workspace> released this run. Each plugin has a private tracking
+          # package whose only job is to give changesets something to version;
+          # it is `kind: github-only`, so it publishes to no registry and its
+          # release is a version bump, a git tag and a GitHub release.
+          # `success` is the gate to read — it is true for a github-only
+          # release exactly as it is for a registry publish. Read `.outcome`
+          # only when you need to know WHICH kind of success it was. See
+          # schemas/6.0/output.json, PublishOutput.publish.workspaces.
+          add_if_released() {
+            if jq -e --arg ws "$1" '.publish.workspaces[$ws] | select(.success)' >/dev/null <<<"$RESULT"; then
+              add_plugin "$2" "$3"
+            fi
+          }
+
+          # For repos with no tracking workspace: repins <name> in
+          # <marketplace> on any completed release of this repo (a GitHub
+          # release was actually created this run).
+          add_if_any_release() {
+            if jq -e 'select(.success) | .totals.releasesCreated > 0' >/dev/null <<<"$RESULT"; then
+              add_plugin "$1" "$2"
+            fi
           }
 
           case "$GITHUB_REPOSITORY" in
             savvy-web/systems)
-              # Tracked by GitHub release rather than by package name: the
-              # plugin tree lives in this repo and is repinned to the release
-              # commit, so any completed release that actually created a
-              # GitHub release this run repins it — no dependency on which
-              # npm package happened to publish.
-              if echo "$RESULT" | jq -e 'select(.success) | .totals.releasesCreated > 0' >/dev/null; then
-                add_plugin "silk"
-              fi
+              add_if_released "@savvy-web/ai-plugins" "silk" "claude-code"
+              add_if_released "@savvy-web/ai-plugins" "silk" "copilot"
               ;;
           esac
 
@@ -174,7 +231,7 @@ jobs:
           fi
 
           json_payload=$(jq -c --argjson plugins "$plugins_json" -n '{plugins: $plugins}')
-          echo "Dispatching repin for: $(echo "$plugins_json" | jq -r '[.[].name] | join(", ")') at $release_sha"
+          echo "Dispatching repin for: $(echo "$plugins_json" | jq -r '[.[] | "\(.name) (\(.marketplace))"] | join(", ")') at $release_sha"
 
           gh api repos/savvy-web/systems/dispatches \
             -f event_type=plugin-release \

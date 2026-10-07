@@ -6,4 +6,5 @@ configDependencies:
   "@savvy-web/pnpm-plugin-silk": 0.47.0
 loglevel: info
 minimumReleaseAgeExclude:
-  - "@turbo/windows-arm64@2.10.13"
+  - "@effected/pnpm-plugin-effect"
+  - "@savvy-web/pnpm-plugin-silk"
