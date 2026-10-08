@@ -61,6 +61,9 @@ jobs:
       - name: Setup runtime
         id: runtime
         uses: savvy-web/silk-runtime-action@v1
+        env:
+          # HeroUI Pro's postinstall downloads its components with this token; without it the install leaves them out.
+          HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
         with:
           turbo-s3-bucket: ${{ secrets.TURBO_S3_BUCKET }}
           turbo-s3-region: ${{ secrets.TURBO_S3_REGION }}
@@ -72,6 +75,9 @@ jobs:
       - name: Run release
         id: release
         uses: savvy-web/silk-release-action@v5
+        env:
+          # HeroUI Pro's postinstall downloads its components with this token; without it the install leaves them out.
+          HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
         with:
           phase: ${{ inputs.phase }}
           app-client-id: ${{ vars.APP_CLIENT_ID }}

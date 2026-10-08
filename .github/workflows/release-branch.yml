@@ -59,6 +59,9 @@ jobs:
 
       - name: Run release
         uses: savvy-web/silk-release-action@v5
+        env:
+          # HeroUI Pro's postinstall downloads its components with this token; without it the install leaves them out.
+          HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
         with:
           phase: branch-management
           app-client-id: ${{ vars.APP_CLIENT_ID }}
