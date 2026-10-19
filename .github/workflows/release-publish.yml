@@ -205,3 +205,39 @@ jobs:
           gh api repos/savvy-web/systems/dispatches \
             -f event_type=plugin-release \
             -f "client_payload[json]=$json_payload"
+
+      - name: Notify the releasing repo
+        # Opt-in per repository with the variable SILK_RELEASE_DISPATCH=true. Tells the repo that just released which
+        # of its workspaces shipped, as one `workspaces-released` repository_dispatch, so it can act on exactly those
+        # (savvy-web/build deploys each released app to Coolify). Not gated on `succeeded`, which is false for the
+        # whole phase when any one workspace fails: the workspaces that did release are still dispatched. A
+        # repository_dispatch sent with GITHUB_TOKEN still starts workflows, unlike most events.
+        if: vars.SILK_RELEASE_DISPATCH == 'true' && steps.release.outputs.phase == 'publish' && !inputs.dry-run && !cancelled()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RESULT: ${{ steps.release.outputs.result }}
+        run: |
+          set -euo pipefail
+
+          # The workspaces that released, in publish order: every workspace of the release is keyed by name in
+          # publish.workspaces (schemas/6.0/output.json), and `success` is true for a github-only one once its GitHub
+          # release exists, and for a registry one once its packages landed (published or recovered). A github-only
+          # wave sharing one bare X.Y.Z tag maps that tag to each workspace from silk-release-action 5.8.0 (#520).
+          workspaces=$(jq -c '
+            [.publish.order[] as $name
+             | .publish.workspaces[$name]
+             | select(.success)
+             | {name: $name, path, version, kind}]
+          ' <<<"$RESULT")
+
+          if [ "$workspaces" = "[]" ]; then
+            echo "No workspaces released this run; skipping the workspaces-released dispatch."
+            exit 0
+          fi
+
+          release_sha=$(git rev-parse HEAD)
+          echo "Dispatching workspaces-released to $GITHUB_REPOSITORY: $(jq -r '[.[] | "\(.name)@\(.version)"] | join(", ")' <<<"$workspaces") at $release_sha"
+
+          jq -nc --argjson workspaces "$workspaces" --arg sha "$release_sha" \
+            '{event_type: "workspaces-released", client_payload: {sha: $sha, workspaces: $workspaces}}' |
+            gh api "repos/$GITHUB_REPOSITORY/dispatches" --input -
