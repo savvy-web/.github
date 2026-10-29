@@ -5,7 +5,7 @@
 	"changelog": [
 		"@savvy-web/changelog",
 		{
-			"repo": "owner/repo"
+			"repo": "savvy-web/.github"
 		}
 	],
 	"commit": false,
