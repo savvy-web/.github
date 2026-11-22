@@ -82,22 +82,19 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/silk-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v2
         env:
           # HeroUI Pro's postinstall downloads its components with this token; without it the install leaves them out.
           HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
         with:
-          turbo-s3-bucket: ${{ secrets.TURBO_S3_BUCKET }}
-          turbo-s3-region: ${{ secrets.TURBO_S3_REGION }}
-          turbo-s3-endpoint: ${{ secrets.TURBO_S3_ENDPOINT }}
-          turbo-s3-access-key-id: ${{ secrets.TURBO_S3_ACCESS_KEY_ID }}
-          turbo-s3-secret-access-key: ${{ secrets.TURBO_S3_SECRET_ACCESS_KEY }}
+          turbo-api: https://cache.savvyweb.systems
 
       - name: Pre-publish validation
         uses: savvy-web/silk-release-action@v5
@@ -321,16 +318,12 @@ jobs:
 
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/silk-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v2
         env:
           # HeroUI Pro's postinstall downloads its components with this token; without it the install leaves them out.
           HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
         with:
-          turbo-s3-bucket: ${{ secrets.TURBO_S3_BUCKET }}
-          turbo-s3-region: ${{ secrets.TURBO_S3_REGION }}
-          turbo-s3-endpoint: ${{ secrets.TURBO_S3_ENDPOINT }}
-          turbo-s3-access-key-id: ${{ secrets.TURBO_S3_ACCESS_KEY_ID }}
-          turbo-s3-secret-access-key: ${{ secrets.TURBO_S3_SECRET_ACCESS_KEY }}
+          turbo-api: https://cache.savvyweb.systems
 
       - name: Detect package manager
         id: pm
