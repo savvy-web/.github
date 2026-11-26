@@ -26,9 +26,9 @@
 		"types:check": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"@okfit/plugin": "^0.5.39",
-		"@savvy-web/silk": "^5.1.8",
-		"@vitest-agent/plugin": "^6.1.0"
+		"@okfit/plugin": "^0.6.0",
+		"@savvy-web/silk": "^5.1.11",
+		"@vitest-agent/plugin": "^6.2.1"
 	},
 	"engines": {
 		"node": ">=24.0.0"
@@ -36,7 +36,7 @@
 	"devEngines": {
 		"packageManager": {
 			"name": "pnpm",
-			"version": "12.22.0",
+			"version": "12.23.0",
 			"onFail": "download"
 		},
 		"runtime": [
